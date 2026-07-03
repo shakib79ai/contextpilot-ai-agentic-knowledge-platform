@@ -1,0 +1,3 @@
+{"question": "What is ContextPilot AI?", "gold_answer": "ContextPilot AI is a production-style LLM knowledge platform that uses RAG, multi-agent orchestration, and human-in-the-loop review.", "gold_context_ids": []}
+{"question": "How does the system decide when to escalate an answer to a human reviewer?", "gold_answer": "It escalates when the composite confidence score falls below the configured escalation threshold.", "gold_context_ids": []}
+{"question": "What happens when a reviewer edits an answer?", "gold_answer": "The correction is indexed as a high-trust context chunk and may trigger a proposed knowledge base update.", "gold_context_ids": []}

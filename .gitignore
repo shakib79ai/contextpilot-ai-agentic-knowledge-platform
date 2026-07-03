@@ -1,0 +1,58 @@
+## Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+.venv*/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.db
+*.sqlite3
+
+## Env / secrets
+.env
+.env.*
+!.env.example
+
+## Vector store / data
+data/vector_store/
+data/uploads/
+*.faiss
+*.pkl
+
+## Eval reports (generated)
+evals/reports/*.json
+
+## Visualization outputs (generated)
+visualizations/outputs/*.png
+
+## Node / frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+node_modules/
+
+## Logs
+*.log
+logs/
+
+## OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+## Docker
+docker-compose.override.yml
+
+## Terraform
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+
+## Alembic (keep versions, ignore local db)
+backend/*.db
