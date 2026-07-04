@@ -26,7 +26,11 @@ def ask_question(
 ):
     conversation = None
     if payload.conversation_id is not None:
-        conversation = db.get(Conversation, payload.conversation_id)
+        conversation = (
+            db.query(Conversation)
+            .filter(Conversation.id == payload.conversation_id, Conversation.user_id == current_user.id)
+            .first()
+        )
     if conversation is None:
         conversation = Conversation(user_id=current_user.id, title=payload.question[:80])
         db.add(conversation)

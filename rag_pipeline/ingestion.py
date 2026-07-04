@@ -102,6 +102,12 @@ def ingest_document(document_id: UUID) -> None:
 
 
 def save_upload(directory: str, filename: str, content: bytes) -> str:
+    # Defense in depth: reject anything that isn't a bare filename, even
+    # though callers are expected to pass a server-generated name (never a
+    # client-supplied one) — see routes_documents.py.
+    if os.path.basename(filename) != filename or filename in (".", ".."):
+        raise ValueError(f"Unsafe filename: {filename!r}")
+
     os.makedirs(directory, exist_ok=True)
     path = os.path.join(directory, filename)
     with open(path, "wb") as f:

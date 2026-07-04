@@ -69,9 +69,11 @@ See [deployment-guide.md](deployment-guide.md) for details, including running se
 - **Evaluation:** Custom RAGAS-style scoring (faithfulness, relevance, answer correctness)
 - **Deployment:** Docker, Docker Compose, GitHub Actions CI, Terraform stubs for AWS ECS
 
-## Security Note on API Keys
+## Security
 
 This repository ships with **no real credentials**. `.env.example` contains clearly-labeled dummy placeholders (e.g. `sk-REPLACE_WITH_YOUR_OPENAI_API_KEY`). Copy it to `.env` and replace each placeholder with your own key before running the system against a real LLM provider. Never commit a populated `.env` file.
+
+The app also **refuses to start** if `SECRET_KEY` is still the placeholder default and `APP_ENV` isn't `development` — that default is public (it's in this repo), so it must never sign real auth tokens. See [deployment-guide.md § Security Notes](deployment-guide.md#7-security-notes) for this and other hardening details (upload path handling, feedback role checks, conversation ownership, non-root container).
 
 ## License
 

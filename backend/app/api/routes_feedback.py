@@ -4,12 +4,19 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.conversation import Answer
-from app.models.enums import AnswerStatus, FeedbackKind
+from app.models.enums import AnswerStatus, FeedbackKind, UserRole
 from app.models.user import User
 from app.schemas.feedback import FeedbackCreate, FeedbackRead
 from context_learning.feedback_store import record_feedback
 
 router = APIRouter(prefix="/feedback", tags=["feedback"])
+
+# reviewer_approve/reviewer_edit/reviewer_reject are meant to be produced only
+# by the reviewer-gated /review/{id}/resolve flow — never by this end-user
+# endpoint, since they feed directly into historical_feedback_score and
+# admin-facing stats. Restricting `kind` here prevents any authenticated
+# member from injecting fake reviewer signals.
+REVIEWER_ONLY_KINDS = {FeedbackKind.reviewer_approve, FeedbackKind.reviewer_edit, FeedbackKind.reviewer_reject}
 
 
 @router.post("", response_model=FeedbackRead, status_code=status.HTTP_201_CREATED)
@@ -18,6 +25,12 @@ def submit_feedback(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if payload.kind in REVIEWER_ONLY_KINDS and current_user.role not in (UserRole.reviewer, UserRole.admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only reviewers can submit reviewer feedback; use thumbs_up/thumbs_down.",
+        )
+
     answer = db.get(Answer, payload.answer_id)
     if answer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")

@@ -77,11 +77,22 @@ Every credential in `.env.example` is a clearly-labeled dummy value (`REPLACE_WI
 
 1. Copy `.env.example` → `.env` (local) or populate your secrets manager (production).
 2. Replace each `REPLACE_WITH_...` placeholder with a real key.
-3. Never commit `.env` — it's already covered by `.gitignore`.
-4. Rotate keys immediately if one is ever accidentally committed.
+3. **Generate a real `SECRET_KEY`** (e.g. `openssl rand -hex 32`) and set `APP_ENV` to anything other than `development`. The app now **refuses to start** if `SECRET_KEY` is still the placeholder default and `APP_ENV != development` — this default ships in the public repo, so leaving it unset would let anyone forge valid auth tokens.
+4. Never commit `.env` — it's already covered by `.gitignore`.
+5. Rotate keys immediately if one is ever accidentally committed.
 
 ## 6. Health & Readiness
 
 - `GET /healthz` — liveness (process up)
-- `GET /readyz` — readiness (DB + Redis + vector store reachable)
+- `GET /readyz` — readiness (DB + Redis + vector store reachable). Returns only `"ok"`/`"error"` per check — the real exception is logged server-side, never echoed to this unauthenticated endpoint.
 - `GET /metrics` — Prometheus-format metrics for scraping into Grafana
+
+## 7. Security Notes
+
+A few things worth knowing if you're extending this project or deploying it for real:
+
+- **Container runs as a non-root `appuser`** (`backend/Dockerfile`) — defense in depth in case of an app-level bug.
+- **Document upload storage names are server-generated** (`{uuid}{extension}`, extension derived from the validated content-type) — the client's original filename is only ever used for display, never for building a filesystem path, which is what prevents path traversal via upload.
+- **Reviewer-only feedback kinds are role-gated**: `POST /api/v1/feedback` only accepts `thumbs_up`/`thumbs_down` from regular users; `reviewer_approve`/`reviewer_edit`/`reviewer_reject` require a reviewer/admin account and are otherwise only produced by the `/review/{id}/resolve` flow.
+- **Conversations are ownership-scoped**: continuing a conversation via `POST /api/v1/query` only works if the `conversation_id` belongs to the calling user.
+- Role escalation to reviewer/admin is deliberately a CLI-only action (`scripts/promote_user.py`), not an API endpoint — see step in §1 above.

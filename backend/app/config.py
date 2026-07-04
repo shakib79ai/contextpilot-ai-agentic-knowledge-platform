@@ -1,6 +1,8 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+PLACEHOLDER_SECRET_KEY = "REPLACE_WITH_A_RANDOM_64_CHAR_SECRET"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -9,7 +11,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_name: str = "ContextPilot AI"
     api_v1_prefix: str = "/api/v1"
-    secret_key: str = "REPLACE_WITH_A_RANDOM_64_CHAR_SECRET"
+    secret_key: str = PLACEHOLDER_SECRET_KEY
     access_token_expire_minutes: int = 60
     cors_origins: str = "http://localhost:3000"
 
@@ -55,4 +57,12 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    if settings.secret_key == PLACEHOLDER_SECRET_KEY and settings.app_env != "development":
+        raise RuntimeError(
+            "SECRET_KEY is still set to the publicly-known placeholder default. "
+            "This value ships in the repo and would let anyone forge valid auth tokens. "
+            "Set a real random SECRET_KEY (e.g. `openssl rand -hex 32`) before running "
+            "with APP_ENV != development."
+        )
+    return settings

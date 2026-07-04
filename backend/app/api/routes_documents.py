@@ -13,7 +13,15 @@ from app.tasks.indexing import ingest_document_task
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
-ALLOWED_CONTENT_TYPES = {"application/pdf", "text/plain", "text/markdown"}
+# Maps content-type -> the storage extension we use on disk. Deriving the
+# on-disk filename from this fixed mapping (rather than the client-supplied
+# filename) is what prevents path traversal — the client's filename is only
+# ever used for display (Document.filename), never for building a path.
+ALLOWED_CONTENT_TYPES = {
+    "application/pdf": ".pdf",
+    "text/plain": ".txt",
+    "text/markdown": ".md",
+}
 
 
 @router.post("", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
@@ -33,7 +41,9 @@ async def upload_document(
     settings = get_settings()
     content = await file.read()
     document_id = uuid.uuid4()
-    safe_filename = f"{document_id}_{file.filename}"
+    # Never build the storage path from the client-supplied filename — build
+    # it entirely from server-controlled values (see ALLOWED_CONTENT_TYPES).
+    safe_filename = f"{document_id}{ALLOWED_CONTENT_TYPES[file.content_type]}"
     storage_path = save_upload(settings.upload_dir, safe_filename, content)
 
     document = Document(

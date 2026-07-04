@@ -18,6 +18,14 @@ RUN pip install -r backend/requirements.txt
 # rag_pipeline/, evals/, and context_learning/ packages are available.
 COPY . .
 
+# Run as a non-root user (defense in depth — limits blast radius of any
+# file-write bug regardless of what path validation exists in app code).
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid appuser --create-home --shell /usr/sbin/nologin appuser \
+    && mkdir -p /repo/data/vector_store /repo/data/uploads \
+    && chown -R appuser:appuser /repo
+
+USER appuser
 WORKDIR /repo/backend
 
 EXPOSE 8000

@@ -46,3 +46,5 @@ Copy `.env.example` to `.env` and fill in whichever of these you're using; leave
 2. `docker-compose up --build` (or see [deployment-guide.md](deployment-guide.md) for running natively)
 3. Register a user at http://localhost:3000/login
 4. `docker-compose exec backend python scripts/promote_user.py --email you@example.com --role admin` (needed to access the Review Dashboard)
+
+Local dev works with the default `.env.example` values as-is (`APP_ENV=development`). **Before deploying anywhere real**, generate a real `SECRET_KEY` (`openssl rand -hex 32`) and set `APP_ENV` to something other than `development` — the app will otherwise refuse to start, since the placeholder secret ships in the public repo. See [deployment-guide.md § Security Notes](deployment-guide.md#7-security-notes).
